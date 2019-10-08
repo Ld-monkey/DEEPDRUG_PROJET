@@ -1,0 +1,3 @@
+# numpy matrix
+*.npy
+/data/deepdrug3d_voxel_data/*.npy
