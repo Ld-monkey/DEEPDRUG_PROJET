@@ -8,13 +8,12 @@ def read_name_pdb_to_list(links, name_list):
             name_list.append(line.strip())
 
 def create_dictonnary_of_matrix_npy(links, name_list_reduce):
-    ''' Method which return dictionnary from lists of name pdb and
-    associated the correct matrix .npy .'''
-    basic_dict = dict()
+    ''' Method which return a list from lists  correct matrix .npy .'''
+    basic_dict = list()
 
     for i in range(0, len(name_list_reduce), 1):
         numpy_array = np.load(links+name_list_reduce[i]+".npy")
-        control_dict = {name_list_reduce[i] : numpy_array}
+        basic_dict.append(numpy_array)
 
     print("Finish !")
     return basic_dict
@@ -56,18 +55,66 @@ if __name__ == "__main__":
                                            int(len(steroid_list)/10),
                                             replace = False)
 
+    # A complet list is result of all concatenations of all previous datas.
+    complet_list_all_data = np.concatenate((control_list_reduce,
+                                            heme_list_reduce,
+                                            nucleotide_list_reduce))
+    # print(complet_list_all_data)
+
+
     # Define the path of all numpy matrix.
     path_deepdrug3D = "../data/deepdrug3d_voxel_data/"
 
-    # Create dictionnarys.
-    control_dict = create_dictonnary_of_matrix_npy(path_deepdrug3D,
+    # Create Y_train
+    y_train = list()
+    for i in range(0, len(control_list_reduce)):
+        if i <= len(control_list_reduce):
+            y_train.append([1,0,0])
+
+    for i in range(0, len(heme_list_reduce)):
+        if i <= len(heme_list_reduce):
+            y_train.append([0,1,0])
+
+    for i in range(0, len(nucleotide_list_reduce)):
+        if i <= len(nucleotide_list_reduce):
+            y_train.append([0,0,1])
+
+    all_elements_reduce = len(control_list_reduce) + len(heme_list_reduce) + len(nucleotide_list_reduce)
+
+    y_train = np.reshape(a = y_train, newshape = (all_elements_reduce, 3))
+    print(y_train)
+
+    # Create x_control train.
+    control_list = create_dictonnary_of_matrix_npy(path_deepdrug3D,
                                                    control_list_reduce)
 
-    heme_dict = create_dictonnary_of_matrix_npy(path_deepdrug3D,
-                                                heme_list_reduce)
+    # Visualize voxel data.
+    control_list_np = np.array(control_list)
 
-    nucleotide_dict = create_dictonnary_of_matrix_npy(path_deepdrug3D,
-                                                      nucleotide_list_reduce)
+    # Reduce dimention au control data set.
+    control_list_np = np.squeeze(control_list_np, axis = 1)
+    print(control_list_np.shape)
 
-    steroid_dict = create_dictonnary_of_matrix_npy(path_deepdrug3D,
-                                                   steroid_list_reduce)
+    # Create nucleatide list for x_train.
+    nucleotide_train = create_dictonnary_of_matrix_npy(path_deepdrug3D,
+                                                       nucleotide_list_reduce)
+
+    nucleotide_list_np = np.array(nucleotide_train)
+    # Display dimension of nucleotide train
+    print(nucleotide_list_np.shape)
+
+    # Create heme list for x_train.
+    heme_train = create_dictonnary_of_matrix_npy(path_deepdrug3D,
+                                                 heme_list_reduce)
+
+    heme_list_np = np.array(heme_train)
+    # Display dimension of heme train
+    print(heme_list_np.shape)
+
+    # Define x_train with all datas.
+    x_train = np.concatenate((control_list_np,
+                              nucleotide_list_np,
+                              heme_list_np))
+    print(x_train.shape)
+
+    # Create model
