@@ -13,6 +13,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as t
 
+
 def read_name_pdb_to_list(links, name_list):
     ''' Method which add all names of pdb into list. '''
     with open(links, "r") as list_pdb:
@@ -229,7 +230,7 @@ if __name__ == "__main__":
     # Save history of model. Ne pas oublier de mettre les tests de validations
     print(y_train.shape)
     print(x_train.shape)
-    history = model.fit(x_train, y_train, epochs = 50, batch_size = 16)
+    history = model.fit(x_train, y_train, epochs = 50, batch_size = 16, validation_split = 0.1)
 
     """
     # Evaluate model.
@@ -239,6 +240,9 @@ if __name__ == "__main__":
 
     print("Test score : ", score[0])
     print("Test accuracy : ", score[1])
+
+    """
+    print(history.history.keys())
 
     # summarize history for accuracy.
     plt.plot(history.history['accuracy'])
@@ -257,4 +261,3 @@ if __name__ == "__main__":
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
-    """
