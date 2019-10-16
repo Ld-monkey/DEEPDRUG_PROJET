@@ -56,6 +56,9 @@ if __name__ == "__main__":
 
     REDUCE_VARIABLE = 10
 
+    # Prendre la meme quantitée de poches. 100, 100, 100
+    # Suffle dans le meme sens le x_train et y_train.
+
     control_list_reduce = np.random.choice(control_list,
                                            int(len(control_list)/REDUCE_VARIABLE),
                                            replace = False)
@@ -141,105 +144,86 @@ if __name__ == "__main__":
     # Create deep learning model.
     print("Model of deep learning")
 
-    """
-    model = Sequential()
+    # input layer
+    inputs_layer = Input(shape=(14, 32, 32, 32))
+    
+    # convolutional layers
+    conv_layer1 = Convolution3D(filters = 64,
+                                kernel_size = (5, 5, 5),
+                                padding='valid',
+                                activation = "relu",
+                                data_format ='channels_first')(inputs_layer)
 
-    #inputs = Input(shape=(14, 32, 32, 32))
+    conv_layer2 = Convolution3D(filters = 64,
+                                padding = 'valid',
+                                kernel_size = (3, 3, 3),
+                                activation = "relu",
+                                data_format ='channels_first')(conv_layer1)
 
-    # Two convolutional layers with leaky Relu activations functions.
-    model.add(Convolution3D(filters = 64,
-                            kernel_size = 5,
-                            padding = 'valid',
-                            activation = 'relu',
-                            input_shape = (14, 32, 32, 32)))
+    # Dropout = 0.2
+    dropout_layer2 = Dropout(0.2)(conv_layer2)
 
-    model.add(Convolution3D(filters = 64,
-                            kernel_size = 3,
-                            padding = 'valid',
-                            activation = 'relu',
-                            data_format='channels_first'))
+    # MaxPooling3D = 2
+    pooling_drop2 = MaxPooling3D(pool_size = (2, 2, 2),
+                                 data_format ='channels_first',
+                                 padding = 'same')(dropout_layer2)
 
-    # A serie of dropout, pooling fully connected and softmax layers.
-    model.add(Dropout(0.2))
-    model.add(MaxPooling3D(pool_size =(2, 2, 2),
-                           strides = None,
-                           padding = 'valid',
-                           data_format = 'channels_first'))
-    model.add(Dropout(0.4))
-    # Fully connected 512
-    model.add(Dropout(0.4))
-    model.add(Activation('softmax'))
+    # Dropout = 0.4
+    dropout_pooling2 = Dropout(0.4)(pooling_drop2)
+
+    # Flatten
+    flatten_layer = Flatten()(dropout_pooling2)
+
+    # Fully connected = 512
+    dense_drop2 = Dense(512, activation='relu')(flatten_layer)
+
+    # Dropout = 0.4
+    dropout_dense2 = Dropout(0.4)(dense_drop2)
+    
+    # Output
+    output_layer2 = Dense(units = 3, activation = "softmax")(dropout_dense2)
+
+    # Define model with input layer and output layer.
+    model = Model(inputs = inputs_layer, outputs = output_layer2)
+
+    #model summarize
+    model.summary()
 
     # Compiling model.
     model.compile(optimizer = "adam", loss="categorical_crossentropy", metrics=["accuracy"])
+
+    print("y_train : {}".format(y_train.shape))
+    print("x_train : {}".format(x_train.shape))
+
+    # epochs = 50 and batch_size = 64 // problème de dimension.
+    history = model.fit(x = x_train,
+                        y = y_train,
+                        epochs = 10,
+                        batch_size = 64,
+                        validation_split = 0.2)
+
     """
-
-    model = Sequential()
-
-    # Conv layer 1
-    model.add(Convolution3D(
-        input_shape = (14,32,32,32),
-        filters=64,
-        kernel_size=5,
-        padding='valid',     # Padding method
-        data_format='channels_first',
-        ))
-
-    model.add(LeakyReLU(alpha = 0.1))
-    # Dropout 1
-    model.add(Dropout(0.2))
-    # Conv layer 2
-    model.add(Convolution3D(
-        filters=64,
-        kernel_size=3,
-        padding='valid',     # Padding method
-        data_format='channels_first',
-    ))
-
-    model.add(LeakyReLU(alpha = 0.1))
-    # Maxpooling 1
-    model.add(MaxPooling3D(
-        pool_size=(2,2,2),
-        strides=None,
-        padding='valid',    # Padding method
-        data_format='channels_first'
-    ))
-
-    # Dropout 2
-    model.add(Dropout(0.4))
-
-    # FC 1
-    model.add(Flatten())
-    model.add(Dense(512)) # TODO changed to 64 for the CAM
-    model.add(LeakyReLU(alpha = 0.1))
-
-    # Dropout 3
-    model.add(Dropout(0.4))
-
-    # Fully connected layer 2 to shape (2) for 2 classes
-    model.add(Dense(3))
-    model.add(Activation('softmax'))
-
-     #adam = Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-    adam = Adam(learning_rate = 0.00001, beta_1 = 0.9,
-                beta_2 = 0.999, amsgrad = False, decay = 0.0)
-
+    exit()
     model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
 
 
     # Save history of model. Ne pas oublier de mettre les tests de validations
-    print(y_train.shape)
-    print(x_train.shape)
+    print("y_train : {}".format(y_train.shape))
+    print("x_train : {}".format(x_train.shape))
     history = model.fit(x_train, y_train, epochs = 50, batch_size = 64, validation_split = 0.2)
 
     """
+
     # Evaluate model.
+    """
     score = model.evaluate(np.array(x_test),
                            np.array(y_test),
                            verbose = 1)
 
     print("Test score : ", score[0])
     print("Test accuracy : ", score[1])
+
+    """
 
     """
     print(history.history.keys())
@@ -261,3 +245,4 @@ if __name__ == "__main__":
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
+    """
