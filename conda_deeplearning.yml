@@ -1,0 +1,12 @@
+name: conda_deeplearning
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - numpy=1.16.5
+  - numpy-base=1.16.5
+  - python=3.7.4
+  - keras=2.2.4
+  - tensorflow=1.14.0
+  - matplotlib=3.1.1
