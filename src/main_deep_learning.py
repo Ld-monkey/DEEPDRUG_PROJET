@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     # 1/10 of lists to reduce data.
 
-    REDUCE_VARIABLE = 50
+    REDUCE_VARIABLE = 10
 
     control_list_reduce = np.random.choice(control_list,
                                            int(len(control_list)/REDUCE_VARIABLE),
@@ -73,8 +73,8 @@ if __name__ == "__main__":
 
     # A complet list is result of all concatenations of all previous datas.
     complet_list_all_data = np.concatenate((control_list_reduce,
-                                            heme_list_reduce,
-                                            nucleotide_list_reduce))
+                                            nucleotide_list_reduce,
+                                            heme_list_reduce))
     # print(complet_list_all_data)
 
 
@@ -92,15 +92,15 @@ if __name__ == "__main__":
         if i <= len(control_list_reduce):
             y_train.append([1,0,0])
 
-    for i in range(0, len(heme_list_reduce)):
-        if i <= len(heme_list_reduce):
-            y_train.append([0,1,0])
-
     for i in range(0, len(nucleotide_list_reduce)):
         if i <= len(nucleotide_list_reduce):
+            y_train.append([0,1,0])
+
+    for i in range(0, len(heme_list_reduce)):
+        if i <= len(heme_list_reduce):
             y_train.append([0,0,1])
 
-    all_elements_reduce = len(control_list_reduce) + len(heme_list_reduce) + len(nucleotide_list_reduce)
+    all_elements_reduce = len(control_list_reduce) + len(nucleotide_list_reduce) + len(heme_list_reduce)
 
     y_train = np.reshape(a = y_train, newshape = (all_elements_reduce, 3))
     print(y_train.shape)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
     # FC 1
     model.add(Flatten())
-    model.add(Dense(128)) # TODO changed to 64 for the CAM
+    model.add(Dense(512)) # TODO changed to 64 for the CAM
     model.add(LeakyReLU(alpha = 0.1))
 
     # Dropout 3
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     # Save history of model. Ne pas oublier de mettre les tests de validations
     print(y_train.shape)
     print(x_train.shape)
-    history = model.fit(x_train, y_train, epochs = 50, batch_size = 16, validation_split = 0.1)
+    history = model.fit(x_train, y_train, epochs = 50, batch_size = 64, validation_split = 0.2)
 
     """
     # Evaluate model.
