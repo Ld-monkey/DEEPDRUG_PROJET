@@ -1,5 +1,16 @@
+# coding : utf-8
+
+"""
+@author : Zygnematophyce
+Master II BIB - 2019 2020
+Projet Deep Learning
+"""
+
+# All imports
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as t
 import keras
 
 from keras import Input, Model, Sequential
@@ -9,10 +20,8 @@ from keras.layers import Dense, MaxPooling3D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
 
-import os
+# Allow to ignore tensorflow warning.
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-import tensorflow as t
-
 
 def read_name_pdb_to_list(links, name_list):
     ''' Method which add all names of pdb into list. '''
@@ -54,21 +63,25 @@ if __name__ == "__main__":
 
     # 1/10 of lists to reduce data.
 
-    REDUCE_VARIABLE = 10
+    # Reduce variable 
+    #REDUCE_VARIABLE = 10
+
+    # Prendre la meme quantitée de poches. 100, 100, 100
+    # Suffle dans le meme sens le x_train et y_train.
 
     control_list_reduce = np.random.choice(control_list,
-                                           int(len(control_list)/REDUCE_VARIABLE),
+                                           100,
                                            replace = False)
 
     heme_list_reduce = np.random.choice(heme_list,
-                                        int(len(heme_list)/REDUCE_VARIABLE),
+                                        100,
                                         replace = False)
     nucleotide_list_reduce = np.random.choice(nucleotide_list,
-                                              int(len(nucleotide_list)/REDUCE_VARIABLE),
+                                              100,
                                               replace = False)
 
     steroid_list_reduce = np.random.choice(steroid_list,
-                                           int(len(steroid_list)/REDUCE_VARIABLE),
+                                           1,
                                             replace = False)
 
     # A complet list is result of all concatenations of all previous datas.
@@ -121,6 +134,7 @@ if __name__ == "__main__":
                                                        nucleotide_list_reduce)
 
     nucleotide_list_np = np.array(nucleotide_train)
+
     # Display dimension of nucleotide train
     print(nucleotide_list_np.shape)
 
@@ -129,6 +143,7 @@ if __name__ == "__main__":
                                                  heme_list_reduce)
 
     heme_list_np = np.array(heme_train)
+
     # Display dimension of heme train
     print(heme_list_np.shape)
 
@@ -138,102 +153,91 @@ if __name__ == "__main__":
                               heme_list_np))
     print(x_train.shape)
 
+    # Suffle the two list in same order.
+
+    print("Before suffleling.")
+
+    #print(x_train.shape[0])
+    #print(y_train)
+    indice = np.arange(x_train.shape[0])
+    np.random.shuffle(indice)
+
+    x_train = x_train[indice]
+    y_train = y_train[indice]
+
+    print("-------- Shuffle x_train and y_train. actived ------------")
+    #print(x_train)
+    #print(y_train)
+
     # Create deep learning model.
     print("Model of deep learning")
 
-    """
-    model = Sequential()
+    # input layer
+    inputs_layer = Input(shape=(14, 32, 32, 32))
 
-    #inputs = Input(shape=(14, 32, 32, 32))
+    # convolutional layers
+    conv_layer1 = Convolution3D(filters = 64,
+                                kernel_size = (5, 5, 5),
+                                padding='valid',
+                                activation = "relu",
+                                data_format ='channels_first')(inputs_layer)
 
-    # Two convolutional layers with leaky Relu activations functions.
-    model.add(Convolution3D(filters = 64,
-                            kernel_size = 5,
-                            padding = 'valid',
-                            activation = 'relu',
-                            input_shape = (14, 32, 32, 32)))
+    conv_layer2 = Convolution3D(filters = 64,
+                                padding = 'valid',
+                                kernel_size = (3, 3, 3),
+                                activation = "relu",
+                                data_format ='channels_first')(conv_layer1)
 
-    model.add(Convolution3D(filters = 64,
-                            kernel_size = 3,
-                            padding = 'valid',
-                            activation = 'relu',
-                            data_format='channels_first'))
+    # Dropout = 0.2
+    dropout_layer2 = Dropout(0.2)(conv_layer2)
 
-    # A serie of dropout, pooling fully connected and softmax layers.
-    model.add(Dropout(0.2))
-    model.add(MaxPooling3D(pool_size =(2, 2, 2),
-                           strides = None,
-                           padding = 'valid',
-                           data_format = 'channels_first'))
-    model.add(Dropout(0.4))
-    # Fully connected 512
-    model.add(Dropout(0.4))
-    model.add(Activation('softmax'))
+    # MaxPooling3D = 2
+    pooling_drop2 = MaxPooling3D(pool_size = (2, 2, 2),
+                                 data_format ='channels_first',
+                                 padding = 'same')(dropout_layer2)
 
-    # Compiling model.
-    model.compile(optimizer = "adam", loss="categorical_crossentropy", metrics=["accuracy"])
-    """
+    # Dropout = 0.4
+    dropout_pooling2 = Dropout(0.4)(pooling_drop2)
 
-    model = Sequential()
+    # Flatten
+    flatten_layer = Flatten()(dropout_pooling2)
 
-    # Conv layer 1
-    model.add(Convolution3D(
-        input_shape = (14,32,32,32),
-        filters=64,
-        kernel_size=5,
-        padding='valid',     # Padding method
-        data_format='channels_first',
-        ))
+    # Fully connected = 512
+    dense_drop2 = Dense(512, activation='relu')(flatten_layer)
 
-    model.add(LeakyReLU(alpha = 0.1))
-    # Dropout 1
-    model.add(Dropout(0.2))
-    # Conv layer 2
-    model.add(Convolution3D(
-        filters=64,
-        kernel_size=3,
-        padding='valid',     # Padding method
-        data_format='channels_first',
-    ))
+    # Dropout = 0.4
+    dropout_dense2 = Dropout(0.4)(dense_drop2)
 
-    model.add(LeakyReLU(alpha = 0.1))
-    # Maxpooling 1
-    model.add(MaxPooling3D(
-        pool_size=(2,2,2),
-        strides=None,
-        padding='valid',    # Padding method
-        data_format='channels_first'
-    ))
+    # Output
+    output_layer2 = Dense(units = 3, activation = "softmax")(dropout_dense2)
 
-    # Dropout 2
-    model.add(Dropout(0.4))
+    # Define model with input layer and output layer.
+    model = Model(inputs = inputs_layer, outputs = output_layer2)
 
-    # FC 1
-    model.add(Flatten())
-    model.add(Dense(512)) # TODO changed to 64 for the CAM
-    model.add(LeakyReLU(alpha = 0.1))
+    #model summarize
+    model.summary()
 
-    # Dropout 3
-    model.add(Dropout(0.4))
-
-    # Fully connected layer 2 to shape (2) for 2 classes
-    model.add(Dense(3))
-    model.add(Activation('softmax'))
-
-     #adam = Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+    # Adam parameter.
     adam = Adam(learning_rate = 0.00001, beta_1 = 0.9,
                 beta_2 = 0.999, amsgrad = False, decay = 0.0)
 
-    model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
-
+    # Compiling model.
+    model.compile(optimizer = adam, loss="categorical_crossentropy", metrics=["accuracy"])
 
     # Save history of model. Ne pas oublier de mettre les tests de validations
-    print(y_train.shape)
-    print(x_train.shape)
-    history = model.fit(x_train, y_train, epochs = 50, batch_size = 64, validation_split = 0.2)
+    print("y_train : {}".format(y_train.shape))
+    print("x_train : {}".format(x_train.shape))
 
-    """
+    # epochs = 50 and batch_size = 64 // problème de dimension.
+    history = model.fit(x = x_train,
+                        y = y_train,
+                        epochs = 30,
+                        batch_size = 32,
+                        validation_split = 0.1)
+
+
     # Evaluate model.
+    """
     score = model.evaluate(np.array(x_test),
                            np.array(y_test),
                            verbose = 1)
@@ -242,6 +246,7 @@ if __name__ == "__main__":
     print("Test accuracy : ", score[1])
 
     """
+
     print(history.history.keys())
 
     # summarize history for accuracy.
