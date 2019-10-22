@@ -1,5 +1,16 @@
+# coding : utf-8
+
+"""
+@author : Zygnematophyce
+Master II BIB - 2019 2020
+Projet Deep Learning
+"""
+
+# All imports
+import os
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as t
 import keras
 
 from keras import Input, Model, Sequential
@@ -9,10 +20,8 @@ from keras.layers import Dense, MaxPooling3D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
 
-import os
+# Allow to ignore tensorflow warning.
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-import tensorflow as t
-
 
 def read_name_pdb_to_list(links, name_list):
     ''' Method which add all names of pdb into list. '''
@@ -54,24 +63,25 @@ if __name__ == "__main__":
 
     # 1/10 of lists to reduce data.
 
-    REDUCE_VARIABLE = 10
+    # Reduce variable 
+    #REDUCE_VARIABLE = 10
 
     # Prendre la meme quantitée de poches. 100, 100, 100
     # Suffle dans le meme sens le x_train et y_train.
 
     control_list_reduce = np.random.choice(control_list,
-                                           int(len(control_list)/REDUCE_VARIABLE),
+                                           100,
                                            replace = False)
 
     heme_list_reduce = np.random.choice(heme_list,
-                                        int(len(heme_list)/REDUCE_VARIABLE),
+                                        100,
                                         replace = False)
     nucleotide_list_reduce = np.random.choice(nucleotide_list,
-                                              int(len(nucleotide_list)/REDUCE_VARIABLE),
+                                              100,
                                               replace = False)
 
     steroid_list_reduce = np.random.choice(steroid_list,
-                                           int(len(steroid_list)/REDUCE_VARIABLE),
+                                           1,
                                             replace = False)
 
     # A complet list is result of all concatenations of all previous datas.
@@ -124,6 +134,7 @@ if __name__ == "__main__":
                                                        nucleotide_list_reduce)
 
     nucleotide_list_np = np.array(nucleotide_train)
+
     # Display dimension of nucleotide train
     print(nucleotide_list_np.shape)
 
@@ -132,6 +143,7 @@ if __name__ == "__main__":
                                                  heme_list_reduce)
 
     heme_list_np = np.array(heme_train)
+
     # Display dimension of heme train
     print(heme_list_np.shape)
 
@@ -141,12 +153,28 @@ if __name__ == "__main__":
                               heme_list_np))
     print(x_train.shape)
 
+    # Suffle the two list in same order.
+
+    print("Before suffleling.")
+
+    #print(x_train.shape[0])
+    #print(y_train)
+    indice = np.arange(x_train.shape[0])
+    np.random.shuffle(indice)
+
+    x_train = x_train[indice]
+    y_train = y_train[indice]
+
+    print("-------- Shuffle x_train and y_train. actived ------------")
+    #print(x_train)
+    #print(y_train)
+
     # Create deep learning model.
     print("Model of deep learning")
 
     # input layer
     inputs_layer = Input(shape=(14, 32, 32, 32))
-    
+
     # convolutional layers
     conv_layer1 = Convolution3D(filters = 64,
                                 kernel_size = (5, 5, 5),
@@ -179,7 +207,7 @@ if __name__ == "__main__":
 
     # Dropout = 0.4
     dropout_dense2 = Dropout(0.4)(dense_drop2)
-    
+
     # Output
     output_layer2 = Dense(units = 3, activation = "softmax")(dropout_dense2)
 
@@ -189,30 +217,24 @@ if __name__ == "__main__":
     #model summarize
     model.summary()
 
-    # Compiling model.
-    model.compile(optimizer = "adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    # Adam parameter.
+    adam = Adam(learning_rate = 0.00001, beta_1 = 0.9,
+                beta_2 = 0.999, amsgrad = False, decay = 0.0)
 
+    # Compiling model.
+    model.compile(optimizer = adam, loss="categorical_crossentropy", metrics=["accuracy"])
+
+    # Save history of model. Ne pas oublier de mettre les tests de validations
     print("y_train : {}".format(y_train.shape))
     print("x_train : {}".format(x_train.shape))
 
     # epochs = 50 and batch_size = 64 // problème de dimension.
     history = model.fit(x = x_train,
                         y = y_train,
-                        epochs = 10,
-                        batch_size = 64,
-                        validation_split = 0.2)
+                        epochs = 30,
+                        batch_size = 32,
+                        validation_split = 0.1)
 
-    """
-    exit()
-    model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
-
-
-    # Save history of model. Ne pas oublier de mettre les tests de validations
-    print("y_train : {}".format(y_train.shape))
-    print("x_train : {}".format(x_train.shape))
-    history = model.fit(x_train, y_train, epochs = 50, batch_size = 64, validation_split = 0.2)
-
-    """
 
     # Evaluate model.
     """
@@ -225,7 +247,6 @@ if __name__ == "__main__":
 
     """
 
-    """
     print(history.history.keys())
 
     # summarize history for accuracy.
@@ -245,4 +266,3 @@ if __name__ == "__main__":
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
-    """
