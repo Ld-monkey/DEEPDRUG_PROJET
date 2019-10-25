@@ -166,8 +166,109 @@ if __name__ == "__main__":
     y_train = y_train[indice]
 
     print("-------- Shuffle x_train and y_train. actived ------------")
-    #print(x_train)
-    #print(y_train)
+
+    # Define x_test and y_test
+
+    """
+    x_test = hazard(50 controles + 50 nucléotides + 50 hemes )
+    y_test = 50x[1,0,0]+50x[0,1,0]+50x[0,0,1]
+    --> suffle dans le meme ordre
+    """
+
+    x_test_control_list_reduce = np.random.choice(control_list,
+                                           50,
+                                           replace = False)
+
+    x_test_heme_list_reduce = np.random.choice(heme_list,
+                                        50,
+                                        replace = False)
+    x_test_nucleotide_list_reduce = np.random.choice(nucleotide_list,
+                                              50,
+                                              replace = False)
+
+    x_test_complet_list_all_data = np.concatenate((x_test_control_list_reduce,
+                                                   x_test_nucleotide_list_reduce,
+                                                   x_test_heme_list_reduce))
+
+    y_test = list()
+
+    for i in range(0, len(x_test_control_list_reduce)):
+        if i <= len(x_test_control_list_reduce):
+            y_train.append([1,0,0])
+
+    for i in range(0, len(x_test_nucleotide_list_reduce)):
+        if i <= len(x_test_nucleotide_list_reduce):
+            y_train.append([0,1,0])
+
+    for i in range(0, len(x_test_heme_list_reduce)):
+        if i <= len(x_test_heme_list_reduce):
+            y_train.append([0,0,1])
+
+    y_test_all_elements_reduce = len(x_test_control_list_reduce) + len(x_test_nucleotide_list_reduce) + len(x_test_heme_list_reduce)
+
+    y_test = np.reshape(a = y_test, newshape = (y_test_all_elements_reduce, 3))
+    print(y_train.shape)
+
+     # Create x_control test.
+    x_test_control_list = create_dictonnary_of_matrix_npy(path_deepdrug3D,
+                                                          x_test_control_list_reduce)
+
+    x_test_control_list_np = np.array(x_test_control_list)
+
+    # Reduce dimention au control data set.
+    x_test_control_list_np = np.squeeze(x_test_control_list_np, axis = 1)
+    print(x_test_control_list_np.shape)
+
+    # Create nucleatide list for x_test.
+    x_test_nucleotide_train = create_dictonnary_of_matrix_npy(path_deepdrug3D,
+                                                              x_test_nucleotide_list_reduce)
+
+    x_test_nucleotide_list_np = np.array(x_test_nucleotide_train)
+
+    # Display dimension of nucleotide train
+    print(x_test_nucleotide_list_np.shape)
+
+    # Create heme list for x_train.
+    x_test_heme = create_dictonnary_of_matrix_npy(path_deepdrug3D,
+                                                        x_test_heme_list_reduce)
+
+    x_test_heme_list_np = np.array(x_test_heme)
+
+    # Display dimension of heme test
+    print(x_test_heme_list_np.shape)
+
+    # Define x_train with all datas.
+    x_test = np.concatenate((x_test_control_list_np,
+                             x_test_nucleotide_list_np,
+                             x_test_heme_list_np))
+    print(x_test.shape)
+
+    # Suffle the two list in same order.
+    print("Before suffleling.")
+    indice_test = np.arange(x_test.shape[0])
+    np.random.shuffle(indice_test)
+
+    x_test = x_test[indice]
+    y_test = y_test[indice]
+
+    print("-------- Shuffle x_test and y_test. actived ------------")
+
+    """
+    Enregister le modele et la sortie du modele .md5
+    +
+    évaluer le modèle
+    """
+
+    """
+    Faire un cross-validation
+    +
+    courbe roc
+    """
+
+    """
+    Dernier recourd essayer avec d'autre modèle
+    et peut etre les comparer.
+    """
 
     # Create deep learning model.
     print("Model of deep learning")
