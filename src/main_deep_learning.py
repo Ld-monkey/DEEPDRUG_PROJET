@@ -320,7 +320,6 @@ if __name__ == "__main__":
                         batch_size = 32,
                         validation_data = (x_test, y_test))
 
-
     # Evaluate model.
     score = model.evaluate(x_test,
                            y_test,
@@ -329,7 +328,7 @@ if __name__ == "__main__":
     print("Test score : ", score[0])
     print("Test accuracy : ", score[1])
 
-
+    # Display keys of history.
     print(history.history.keys())
 
     # summarize history for accuracy.
@@ -356,12 +355,15 @@ if __name__ == "__main__":
     # model = load_model("my_model.h5")
 
     """
-    Faire un cross-validation
+    Calculer le taux de faux positif et le taux de faux négatif.
+    avec model.predict(x_train) compare avec ton vrai x_train.
+
+    model.predit(x_test) comparer avec le vrai x_test.
     +
     courbe roc
     """
 
     """
-    Dernier recourd essayer avec d'autre modèle
-    et peut etre les comparer.
+    Dernier recours essayer avec d'autre modèle et peut etre les comparer.
+    Choisir un autre algorithme de prédition.
     """
