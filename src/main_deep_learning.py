@@ -119,11 +119,11 @@ if __name__ == "__main__":
     print(y_train.shape)
 
     # Create x_control train.
-    control_list = create_dictonnary_of_matrix_npy(path_deepdrug3D,
-                                                   control_list_reduce)
+    control_list_x_train = create_dictonnary_of_matrix_npy(path_deepdrug3D,
+                                                           control_list_reduce)
 
     # Visualize voxel data.
-    control_list_np = np.array(control_list)
+    control_list_np = np.array(control_list_x_train)
 
     # Reduce dimention au control data set.
     control_list_np = np.squeeze(control_list_np, axis = 1)
@@ -169,6 +169,7 @@ if __name__ == "__main__":
 
     # Define x_test and y_test
 
+    print("-------- Start x_test and y_test.  -----------------------")
     """
     x_test = hazard(50 controles + 50 nucléotides + 50 hemes )
     y_test = 50x[1,0,0]+50x[0,1,0]+50x[0,0,1]
@@ -176,15 +177,15 @@ if __name__ == "__main__":
     """
 
     x_test_control_list_reduce = np.random.choice(control_list,
-                                           50,
-                                           replace = False)
+                                                  50,
+                                                  replace = False)
 
     x_test_heme_list_reduce = np.random.choice(heme_list,
-                                        50,
-                                        replace = False)
+                                               50,
+                                               replace = False)
     x_test_nucleotide_list_reduce = np.random.choice(nucleotide_list,
-                                              50,
-                                              replace = False)
+                                                     50,
+                                                     replace = False)
 
     x_test_complet_list_all_data = np.concatenate((x_test_control_list_reduce,
                                                    x_test_nucleotide_list_reduce,
@@ -194,15 +195,15 @@ if __name__ == "__main__":
 
     for i in range(0, len(x_test_control_list_reduce)):
         if i <= len(x_test_control_list_reduce):
-            y_train.append([1,0,0])
+            y_test.append([1,0,0])
 
     for i in range(0, len(x_test_nucleotide_list_reduce)):
         if i <= len(x_test_nucleotide_list_reduce):
-            y_train.append([0,1,0])
+            y_test.append([0,1,0])
 
     for i in range(0, len(x_test_heme_list_reduce)):
         if i <= len(x_test_heme_list_reduce):
-            y_train.append([0,0,1])
+            y_test.append([0,0,1])
 
     y_test_all_elements_reduce = len(x_test_control_list_reduce) + len(x_test_nucleotide_list_reduce) + len(x_test_heme_list_reduce)
 
@@ -248,27 +249,10 @@ if __name__ == "__main__":
     indice_test = np.arange(x_test.shape[0])
     np.random.shuffle(indice_test)
 
-    x_test = x_test[indice]
-    y_test = y_test[indice]
+    x_test = x_test[indice_test]
+    y_test = y_test[indice_test]
 
     print("-------- Shuffle x_test and y_test. actived ------------")
-
-    """
-    Enregister le modele et la sortie du modele .md5
-    +
-    évaluer le modèle
-    """
-
-    """
-    Faire un cross-validation
-    +
-    courbe roc
-    """
-
-    """
-    Dernier recourd essayer avec d'autre modèle
-    et peut etre les comparer.
-    """
 
     # Create deep learning model.
     print("Model of deep learning")
@@ -329,24 +313,22 @@ if __name__ == "__main__":
     print("y_train : {}".format(y_train.shape))
     print("x_train : {}".format(x_train.shape))
 
-    # epochs = 50 and batch_size = 64 // problème de dimension.
+    # epochs = 30 and batch_size = 32 // problème de dimension.
     history = model.fit(x = x_train,
                         y = y_train,
                         epochs = 30,
                         batch_size = 32,
-                        validation_split = 0.1)
+                        validation_data = (x_test, y_test))
 
 
     # Evaluate model.
-    """
-    score = model.evaluate(np.array(x_test),
-                           np.array(y_test),
-                           verbose = 1)
+    score = model.evaluate(x_test,
+                           y_test,
+                           verbose=1)
 
     print("Test score : ", score[0])
     print("Test accuracy : ", score[1])
 
-    """
 
     print(history.history.keys())
 
@@ -367,3 +349,19 @@ if __name__ == "__main__":
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
+
+    # Save model.
+    model.save('..result/model/deep_learning_model.h5')
+
+    # model = load_model("my_model.h5")
+
+    """
+    Faire un cross-validation
+    +
+    courbe roc
+    """
+
+    """
+    Dernier recourd essayer avec d'autre modèle
+    et peut etre les comparer.
+    """
