@@ -6,6 +6,8 @@ Master II BIB - 2019 2020
 Projet Deep Learning
 """
 
+# Random seed tensorflow.
+
 # All imports
 import os
 import numpy as np
@@ -19,6 +21,7 @@ from keras.layers import Activation, Dropout, Flatten
 from keras.layers import Dense, MaxPooling3D
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
+from keras.models import load_model
 
 # Allow to ignore tensorflow warning.
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
@@ -61,13 +64,11 @@ if __name__ == "__main__":
     # Add steroid list.
     read_name_pdb_to_list("../data/steroid_list/steroid.list", steroid_list)
 
-    # 1/10 of lists to reduce data.
-
-    # Reduce variable 
-    #REDUCE_VARIABLE = 10
-
     # Prendre la meme quantitée de poches. 100, 100, 100
     # Suffle dans le meme sens le x_train et y_train.
+
+    #  Mettre une seed pour reproduire les résultats.
+    np.random.seed(seed = 42)
 
     control_list_reduce = np.random.choice(control_list,
                                            100,
@@ -254,71 +255,119 @@ if __name__ == "__main__":
 
     print("-------- Shuffle x_test and y_test. actived ------------")
 
-    # Create deep learning model.
-    print("Model of deep learning")
+    verify_exit_model = os.path.exists('../results/model/deep_learning_model.h5')
 
-    # input layer
-    inputs_layer = Input(shape=(14, 32, 32, 32))
+    # Condition ask to delete deep learning model.
+    if (verify_exit_model == True):
+        print("Verify model.")
+        print(verify_exit_model)
+        reponse = False
+        while( reponse != True):
+            print("Do you want to remove deep_learning_model.h5 ?")
+            delete_model = input("Please enter yes or no :")
+            if (delete_model == 'yes'):
+                os.remove('../results/model/deep_learning_model.h5')
+                print('File deleted')
+                reponse = True
+            elif (delete_model == 'no'):
+                print('File no deleted')
+                reponse = True
+            else:
+                reponse = False
 
-    # convolutional layers
-    conv_layer1 = Convolution3D(filters = 64,
-                                kernel_size = (5, 5, 5),
-                                padding='valid',
-                                activation = "relu",
-                                data_format ='channels_first')(inputs_layer)
+    if (verify_exit_model != True):
+        # Create deep learning model.
+        print("Model of deep learning")
 
-    conv_layer2 = Convolution3D(filters = 64,
-                                padding = 'valid',
-                                kernel_size = (3, 3, 3),
-                                activation = "relu",
-                                data_format ='channels_first')(conv_layer1)
+        # input layer
+        inputs_layer = Input(shape=(14, 32, 32, 32))
 
-    # Dropout = 0.2
-    dropout_layer2 = Dropout(0.2)(conv_layer2)
+        # convolutional layers
+        conv_layer1 = Convolution3D(filters = 64,
+                                    kernel_size = (5, 5, 5),
+                                    padding='valid',
+                                    activation = "relu",
+                                    data_format ='channels_first')(inputs_layer)
 
-    # MaxPooling3D = 2
-    pooling_drop2 = MaxPooling3D(pool_size = (2, 2, 2),
-                                 data_format ='channels_first',
-                                 padding = 'same')(dropout_layer2)
+        conv_layer2 = Convolution3D(filters = 64,
+                                    padding = 'valid',
+                                    kernel_size = (3, 3, 3),
+                                    activation = "relu",
+                                    data_format ='channels_first')(conv_layer1)
 
-    # Dropout = 0.4
-    dropout_pooling2 = Dropout(0.4)(pooling_drop2)
+        # Dropout = 0.2
+        dropout_layer2 = Dropout(0.2)(conv_layer2)
 
-    # Flatten
-    flatten_layer = Flatten()(dropout_pooling2)
+        # MaxPooling3D = 2
+        pooling_drop2 = MaxPooling3D(pool_size = (2, 2, 2),
+                                     data_format ='channels_first',
+                                     padding = 'same')(dropout_layer2)
 
-    # Fully connected = 512
-    dense_drop2 = Dense(512, activation='relu')(flatten_layer)
+        # Dropout = 0.4
+        dropout_pooling2 = Dropout(0.4)(pooling_drop2)
 
-    # Dropout = 0.4
-    dropout_dense2 = Dropout(0.4)(dense_drop2)
+        # Flatten
+        flatten_layer = Flatten()(dropout_pooling2)
 
-    # Output
-    output_layer2 = Dense(units = 3, activation = "softmax")(dropout_dense2)
+        # Fully connected = 512
+        dense_drop2 = Dense(512, activation='relu')(flatten_layer)
 
-    # Define model with input layer and output layer.
-    model = Model(inputs = inputs_layer, outputs = output_layer2)
+        # Dropout = 0.4
+        dropout_dense2 = Dropout(0.4)(dense_drop2)
 
-    #model summarize
-    model.summary()
+        # Output
+        output_layer2 = Dense(units = 3, activation = "softmax")(dropout_dense2)
 
-    # Adam parameter.
-    adam = Adam(learning_rate = 0.00001, beta_1 = 0.9,
-                beta_2 = 0.999, amsgrad = False, decay = 0.0)
+        # Define model with input layer and output layer.
+        model = Model(inputs = inputs_layer, outputs = output_layer2)
 
-    # Compiling model.
-    model.compile(optimizer = adam, loss="categorical_crossentropy", metrics=["accuracy"])
+        #model summarize
+        model.summary()
 
-    # Save history of model. Ne pas oublier de mettre les tests de validations
-    print("y_train : {}".format(y_train.shape))
-    print("x_train : {}".format(x_train.shape))
+        # Adam parameter.
+        adam = Adam(learning_rate = 0.00001, beta_1 = 0.9,
+                    beta_2 = 0.999, amsgrad = False, decay = 0.0)
 
-    # epochs = 30 and batch_size = 32 // problème de dimension.
-    history = model.fit(x = x_train,
-                        y = y_train,
-                        epochs = 30,
-                        batch_size = 32,
-                        validation_data = (x_test, y_test))
+        # Compiling model.
+        model.compile(optimizer = adam, loss="categorical_crossentropy", metrics=["accuracy"])
+
+        # Save history of model. Ne pas oublier de mettre les tests de validations
+        print("y_train : {}".format(y_train.shape))
+        print("x_train : {}".format(x_train.shape))
+
+        # epochs = 30 and batch_size = 32 // problème de dimension.
+        history = model.fit(x = x_train,
+                            y = y_train,
+                            epochs = 30,
+                            batch_size = 32,
+                            validation_data = (x_test, y_test))
+
+        # Display keys of history.
+        print(history.history.keys())
+
+        # summarize history for accuracy.
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        # summarize history for loss.
+        plt.plot(history.history['loss'])
+        plt.plot(history.history["val_loss"])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        # Save model.
+        model.save('../results/model/deep_learning_model.h5')
+    else:
+        print("../results/model/deep_learning_model.h5 exits")
+        model = load_model("../results/model/deep_learning_model.h5")
 
     # Evaluate model.
     score = model.evaluate(x_test,
@@ -328,31 +377,13 @@ if __name__ == "__main__":
     print("Test score : ", score[0])
     print("Test accuracy : ", score[1])
 
-    # Display keys of history.
-    print(history.history.keys())
+    print(control_list_reduce)
+    print("-----------------")
+    print(x_test_control_list_reduce)
 
-    # summarize history for accuracy.
-    plt.plot(history.history['accuracy'])
-    plt.plot(history.history['val_accuracy'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
-
-    # summarize history for loss.
-    plt.plot(history.history['loss'])
-    plt.plot(history.history["val_loss"])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
-
-    # Save model.
-    model.save('..result/model/deep_learning_model.h5')
-
-    # model = load_model("my_model.h5")
+    """
+    Mettre un earlier stopping dans model.
+    """
 
     """
     Calculer le taux de faux positif et le taux de faux négatif.
@@ -363,7 +394,11 @@ if __name__ == "__main__":
     courbe roc
     """
 
+
+
     """
     Dernier recours essayer avec d'autre modèle et peut etre les comparer.
     Choisir un autre algorithme de prédition.
     """
+
+
