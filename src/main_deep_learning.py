@@ -23,6 +23,9 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
 from keras.models import load_model
 
+# Using for roc curve.
+from sklearn import metrics
+
 # Allow to ignore tensorflow warning.
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
@@ -394,6 +397,68 @@ if __name__ == "__main__":
     courbe roc
     """
 
+    y_test_prediction = model.predict(x_test)
+
+    # For control predit.
+    y_test_prediction_control = y_test_prediction[:,0]
+    y_test_control = y_test[:,0]
+
+    print(y_test_prediction_control)
+    print(y_test_control)
+
+    control_fpr, control_tpr, control_thresholds = metrics.roc_curve(y_test_control, y_test_prediction_control)
+    control_roc_auc = metrics.auc(control_fpr, control_tpr)
+
+    # For nucleotide
+    y_test_prediction_nucleotide = y_test_prediction[:,1]
+    y_test_nucleotide = y_test[:,1]
+
+    print(y_test_prediction_nucleotide)
+    print(y_test_nucleotide)
+
+    nucleotide_fpr, nucleotide_tpr, nucleotide_thresholds = metrics.roc_curve(y_test_nucleotide, y_test_prediction_nucleotide)
+    nucleotide_roc_auc = metrics.auc(nucleotide_fpr, nucleotide_tpr)
+
+    # For heme
+    y_test_prediction_heme = y_test_prediction[:,2]
+    y_test_heme = y_test[:,2]
+
+    print(y_test_prediction_heme)
+    print(y_test_heme)
+
+    heme_fpr, heme_tpr, heme_thresholds = metrics.roc_curve(y_test_heme, y_test_prediction_heme)
+    heme_roc_auc = metrics.auc(heme_fpr, heme_tpr)
+
+
+    plt.title("Courbe ROC")
+    plt.plot(control_fpr,
+             control_tpr,
+             color='darkblue',
+             linestyle='-',
+             linewidth=4,
+             label = "control AUC = %0.2f" % control_roc_auc)
+
+    plt.plot(heme_fpr,
+             heme_tpr,
+             color='darkorange',
+             linestyle=':',
+             linewidth=4,
+             label = "heme AUC = %0.2f" % heme_roc_auc)
+
+    plt.plot(nucleotide_fpr,
+             nucleotide_tpr,
+             color='deeppink',
+             linestyle=':',
+             linewidth=4,
+             label = "nucleotide AUC = %0.2f" % nucleotide_roc_auc)
+
+    plt.legend(loc = 'lower right')
+    plt.plot([0, 1], [0, 1], 'r--')
+    plt.xlim([0, 1])
+    plt.ylim([0, 1.05])
+    plt.ylabel("Sensibility")
+    plt.xlabel("1-Sensibility")
+    plt.show()
 
 
     """
