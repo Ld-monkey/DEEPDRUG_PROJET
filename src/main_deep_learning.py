@@ -10,6 +10,7 @@ Projet Deep Learning
 
 # All imports
 import os
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as t
@@ -45,6 +46,22 @@ def create_dictonnary_of_matrix_npy(links, name_list_reduce):
 
     print("Finish !")
     return basic_dict
+
+def general_statistic_calcul(true_positive, true_negative,
+                             false_positive, false_negative):
+    """ Methode calcul general statistic values from model. """
+    acc = (true_positive + true_negative)/(true_positive + false_positive + true_negative + false_negative)
+
+    ppv = (true_positive)/(true_positive + false_positive)
+
+    tnr = (true_negative)/(true_negative + false_positive)
+
+    tpr = (true_positive)/(true_positive + false_negative)
+
+    fpr = (false_positive)/(false_positive + true_negative)
+
+    mcc = ((true_positive * true_positive)-(false_positive * false_negative))/math.sqrt((true_positive + false_negative)*(true_positive + false_negative)*(true_negative + false_positive)*(true_negative + false_negative))
+    print("ACC = {}\nPPV = {}\nTNR = {}\nTPR = {}\nFRP = {}\nMCC = {}".format(acc, ppv, tnr, tpr, fpr, mcc))
 
 if __name__ == "__main__":
     print("DEEP DRUG 3D - 2019 - 2020")
@@ -403,18 +420,12 @@ if __name__ == "__main__":
     y_test_prediction_control = y_test_prediction[:,0]
     y_test_control = y_test[:,0]
 
-    print(y_test_prediction_control)
-    print(y_test_control)
-
     control_fpr, control_tpr, control_thresholds = metrics.roc_curve(y_test_control, y_test_prediction_control)
     control_roc_auc = metrics.auc(control_fpr, control_tpr)
 
     # For nucleotide
     y_test_prediction_nucleotide = y_test_prediction[:,1]
     y_test_nucleotide = y_test[:,1]
-
-    print(y_test_prediction_nucleotide)
-    print(y_test_nucleotide)
 
     nucleotide_fpr, nucleotide_tpr, nucleotide_thresholds = metrics.roc_curve(y_test_nucleotide, y_test_prediction_nucleotide)
     nucleotide_roc_auc = metrics.auc(nucleotide_fpr, nucleotide_tpr)
@@ -423,12 +434,8 @@ if __name__ == "__main__":
     y_test_prediction_heme = y_test_prediction[:,2]
     y_test_heme = y_test[:,2]
 
-    print(y_test_prediction_heme)
-    print(y_test_heme)
-
     heme_fpr, heme_tpr, heme_thresholds = metrics.roc_curve(y_test_heme, y_test_prediction_heme)
     heme_roc_auc = metrics.auc(heme_fpr, heme_tpr)
-
 
     plt.title("Courbe ROC")
     plt.plot(control_fpr,
@@ -460,10 +467,39 @@ if __name__ == "__main__":
     plt.xlabel("1-Sensibility")
     plt.show()
 
+    # for confusion matrix of control.
+    tn, fp, fn , tp = metrics.confusion_matrix(y_test_control,
+                                               y_test_prediction_control.round()).ravel()
+    print("For control\nVP = {} | FP = {} \nFN = {} | VN = {}".format(tp, fp, fn, tn))
+
+    # Display statistics values
+    general_statistic_calcul(tp, tn, fp, fn)
+
+    # for confusion matrix of nucleotide.
+    tn, fp, fn , tp = metrics.confusion_matrix(y_test_nucleotide,
+                                               y_test_prediction_nucleotide.round()).ravel()
+    print("For nucleotide\nVP = {} | FP = {} \nFN = {} | VN = {}".format(tp, fp, fn, tn))
+
+    # Display statistics values
+    general_statistic_calcul(tp, tn, fp, fn)
+
+    # for confusion matrix of heme.
+    tn, fp, fn , tp = metrics.confusion_matrix(y_test_heme,
+                                               y_test_prediction_heme.round()).ravel()
+    print("For heme\nVP = {} | FP = {} \nFN = {} | VN = {}".format(tp, fp, fn, tn))
+
+    # Display statistics values
+    general_statistic_calcul(tp, tn, fp, fn)
 
     """
     Dernier recours essayer avec d'autre modèle et peut etre les comparer.
     Choisir un autre algorithme de prédition.
     """
 
-
+    """
+    Essayer de trouver une poche bien prédite.
+    Essayer de trouver une poche mal prédite.
+    ==> essayer de trouver un faut possitif et
+    essayer de mon avec son pdb pourquoi il est
+    considérere comme une poche.
+    """
