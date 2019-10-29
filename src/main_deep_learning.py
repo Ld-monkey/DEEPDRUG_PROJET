@@ -397,9 +397,17 @@ if __name__ == "__main__":
     print("Test score : ", score[0])
     print("Test accuracy : ", score[1])
 
-    print(control_list_reduce)
+    print("x_test")
     print("-----------------")
-    print(x_test_control_list_reduce)
+
+    # afficher toute la liste
+    all_x_test_string = np.concatenate((x_test_control_list_reduce,
+                                       x_test_nucleotide_list_reduce,
+                                       x_test_heme_list_reduce))
+    print(all_x_test_string)
+    print("----------------")
+    print(all_x_test_string[indice_test])
+    print(indice_test)
 
     """
     Mettre un earlier stopping dans model.
@@ -416,27 +424,61 @@ if __name__ == "__main__":
 
     y_test_prediction = model.predict(x_test)
 
-    # For control predit.
+    # For control prediction.
     y_test_prediction_control = y_test_prediction[:,0]
     y_test_control = y_test[:,0]
+
+    print(y_test_control)
+    print(y_test_prediction_control.round())
+
+    FN = 0
+    FP = 0
+    TP = 0
+    TN = 0
+
+    for i in range(len(y_test_prediction_control)): 
+        if y_test_prediction_control.round()[i]==1 and y_test_control[i]!=y_test_prediction_control[i].round():
+            print("False Positive")
+            FP += 1
+            print(i)
+            print(indice_test[i])
+            print(all_x_test_string[indice_test[i]])
+        elif y_test_prediction_control.round()[i]==0 and y_test_control[i]!=y_test_prediction_control[i].round():
+           print("False Negative")
+           FN += 1
+           print(i)
+           print(indice_test[i])
+           print(all_x_test_string[indice_test[i]])
+        if y_test_control[i]==y_test_prediction_control.round()[i]==1:
+           TP += 1
+        if y_test_control[i]==y_test_prediction_control.round()[i]==0:
+           TN += 1
+
+    print("FN = ", FN)
+    print("FP = ", FP)
+    print("VP = ", TP)
+    print("FN = ", TN)
+
+    exit()
 
     control_fpr, control_tpr, control_thresholds = metrics.roc_curve(y_test_control, y_test_prediction_control)
     control_roc_auc = metrics.auc(control_fpr, control_tpr)
 
-    # For nucleotide
+    # For nucleotide prediction.
     y_test_prediction_nucleotide = y_test_prediction[:,1]
     y_test_nucleotide = y_test[:,1]
 
     nucleotide_fpr, nucleotide_tpr, nucleotide_thresholds = metrics.roc_curve(y_test_nucleotide, y_test_prediction_nucleotide)
     nucleotide_roc_auc = metrics.auc(nucleotide_fpr, nucleotide_tpr)
 
-    # For heme
+    # For heme prediction.
     y_test_prediction_heme = y_test_prediction[:,2]
     y_test_heme = y_test[:,2]
 
     heme_fpr, heme_tpr, heme_thresholds = metrics.roc_curve(y_test_heme, y_test_prediction_heme)
     heme_roc_auc = metrics.auc(heme_fpr, heme_tpr)
 
+    # Plot of roc curve.
     plt.title("Courbe ROC")
     plt.plot(control_fpr,
              control_tpr,
@@ -472,6 +514,8 @@ if __name__ == "__main__":
                                                y_test_prediction_control.round()).ravel()
     print("For control\nVP = {} | FP = {} \nFN = {} | VN = {}".format(tp, fp, fn, tn))
 
+    # 
+
     # Display statistics values
     general_statistic_calcul(tp, tn, fp, fn)
 
@@ -503,3 +547,4 @@ if __name__ == "__main__":
     essayer de mon avec son pdb pourquoi il est
     considérere comme une poche.
     """
+    
