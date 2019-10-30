@@ -6,8 +6,6 @@ Master II BIB - 2019 2020
 Projet Deep Learning
 """
 
-# Random seed tensorflow.
-
 # All imports
 import os
 import math
@@ -84,12 +82,10 @@ if __name__ == "__main__":
     # Add steroid list.
     read_name_pdb_to_list("../data/steroid_list/steroid.list", steroid_list)
 
-    # Prendre la meme quantitée de poches. 100, 100, 100
-    # Suffle dans le meme sens le x_train et y_train.
-
-    #  Mettre une seed pour reproduire les résultats.
+    #  Add seed to control randomization.
     np.random.seed(seed = 42)
 
+    # Create under datasets
     control_list_reduce = np.random.choice(control_list,
                                            100,
                                            replace = False)
@@ -109,17 +105,11 @@ if __name__ == "__main__":
     complet_list_all_data = np.concatenate((control_list_reduce,
                                             nucleotide_list_reduce,
                                             heme_list_reduce))
-    # print(complet_list_all_data)
-
 
     # Define the path of all numpy matrix.
     path_deepdrug3D = "../data/deepdrug3d_voxel_data/"
 
     # Define y_train
-    """
-    a = np.array([1, 0, 0]* len(control_list_reduce) * 14 * 32 * 32 * 32).reshape((len(control_list_reduce) * 14* 32* 32* 32, 3))
-    print(a.shape)
-    """
     y_train = list()
 
     for i in range(0, len(control_list_reduce)):
@@ -172,14 +162,8 @@ if __name__ == "__main__":
     x_train = np.concatenate((control_list_np,
                               nucleotide_list_np,
                               heme_list_np))
-    print(x_train.shape)
 
     # Suffle the two list in same order.
-
-    print("Before suffleling.")
-
-    #print(x_train.shape[0])
-    #print(y_train)
     indice = np.arange(x_train.shape[0])
     np.random.shuffle(indice)
 
@@ -191,12 +175,6 @@ if __name__ == "__main__":
     # Define x_test and y_test
 
     print("-------- Start x_test and y_test.  -----------------------")
-    """
-    x_test = hazard(50 controles + 50 nucléotides + 50 hemes )
-    y_test = 50x[1,0,0]+50x[0,1,0]+50x[0,0,1]
-    --> suffle dans le meme ordre
-    """
-
     x_test_control_list_reduce = np.random.choice(control_list,
                                                   50,
                                                   replace = False)
@@ -212,6 +190,7 @@ if __name__ == "__main__":
                                                    x_test_nucleotide_list_reduce,
                                                    x_test_heme_list_reduce))
 
+    # Define y test.
     y_test = list()
 
     for i in range(0, len(x_test_control_list_reduce)):
@@ -229,7 +208,6 @@ if __name__ == "__main__":
     y_test_all_elements_reduce = len(x_test_control_list_reduce) + len(x_test_nucleotide_list_reduce) + len(x_test_heme_list_reduce)
 
     y_test = np.reshape(a = y_test, newshape = (y_test_all_elements_reduce, 3))
-    print(y_train.shape)
 
      # Create x_control test.
     x_test_control_list = create_dictonnary_of_matrix_npy(path_deepdrug3D,
@@ -247,26 +225,18 @@ if __name__ == "__main__":
 
     x_test_nucleotide_list_np = np.array(x_test_nucleotide_train)
 
-    # Display dimension of nucleotide train
-    print(x_test_nucleotide_list_np.shape)
-
     # Create heme list for x_train.
     x_test_heme = create_dictonnary_of_matrix_npy(path_deepdrug3D,
                                                         x_test_heme_list_reduce)
 
     x_test_heme_list_np = np.array(x_test_heme)
 
-    # Display dimension of heme test
-    print(x_test_heme_list_np.shape)
-
     # Define x_train with all datas.
     x_test = np.concatenate((x_test_control_list_np,
                              x_test_nucleotide_list_np,
                              x_test_heme_list_np))
-    print(x_test.shape)
 
     # Suffle the two list in same order.
-    print("Before suffleling.")
     indice_test = np.arange(x_test.shape[0])
     np.random.shuffle(indice_test)
 
@@ -351,19 +321,12 @@ if __name__ == "__main__":
         # Compiling model.
         model.compile(optimizer = adam, loss="categorical_crossentropy", metrics=["accuracy"])
 
-        # Save history of model. Ne pas oublier de mettre les tests de validations
-        print("y_train : {}".format(y_train.shape))
-        print("x_train : {}".format(x_train.shape))
-
         # epochs = 30 and batch_size = 32 // problème de dimension.
         history = model.fit(x = x_train,
                             y = y_train,
                             epochs = 30,
                             batch_size = 32,
                             validation_data = (x_test, y_test))
-
-        # Display keys of history.
-        print(history.history.keys())
 
         # summarize history for accuracy.
         plt.plot(history.history['accuracy'])
@@ -396,32 +359,14 @@ if __name__ == "__main__":
 
     print("Test score : ", score[0])
     print("Test accuracy : ", score[1])
-
-    print("x_test")
     print("-----------------")
 
-    # afficher toute la liste
     all_x_test_string = np.concatenate((x_test_control_list_reduce,
                                        x_test_nucleotide_list_reduce,
                                        x_test_heme_list_reduce))
-    print(all_x_test_string)
     print("----------------")
-    print(all_x_test_string[indice_test])
-    print(indice_test)
 
-    """
-    Mettre un earlier stopping dans model.
-    """
-
-    """
-    Calculer le taux de faux positif et le taux de faux négatif.
-    avec model.predict(x_train) compare avec ton vrai x_train.
-
-    model.predit(x_test) comparer avec le vrai x_test.
-    +
-    courbe roc
-    """
-
+    # Define Y test prediction.
     y_test_prediction = model.predict(x_test)
 
     # For control prediction.
@@ -431,6 +376,10 @@ if __name__ == "__main__":
     print(y_test_control)
     print(y_test_prediction_control.round())
 
+    """
+    This part of the code highlights the false positives to try to
+    understand why they are interpreted as false positive
+    """
     FN = 0
     FP = 0
     TP = 0
@@ -443,12 +392,14 @@ if __name__ == "__main__":
             print(i)
             print(indice_test[i])
             print(all_x_test_string[indice_test[i]])
+            print(y_test[i])
         elif y_test_prediction_control.round()[i]==0 and y_test_control[i]!=y_test_prediction_control[i].round():
            print("False Negative")
            FN += 1
            print(i)
            print(indice_test[i])
            print(all_x_test_string[indice_test[i]])
+           print(y_test[i])
         if y_test_control[i]==y_test_prediction_control.round()[i]==1:
            TP += 1
         if y_test_control[i]==y_test_prediction_control.round()[i]==0:
@@ -534,17 +485,3 @@ if __name__ == "__main__":
 
     # Display statistics values
     general_statistic_calcul(tp, tn, fp, fn)
-
-    """
-    Dernier recours essayer avec d'autre modèle et peut etre les comparer.
-    Choisir un autre algorithme de prédition.
-    """
-
-    """
-    Essayer de trouver une poche bien prédite.
-    Essayer de trouver une poche mal prédite.
-    ==> essayer de trouver un faut possitif et
-    essayer de mon avec son pdb pourquoi il est
-    considérere comme une poche.
-    """
-    
